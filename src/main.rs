@@ -46,6 +46,42 @@ fn main() {
     for (x, y) in point_vector.iter() {
         println!("x={x}, y={y}");
     }
+
+    // In our algorithm, the size of a cell is sqrt(radius)/2, so that two adjacent cells have at most a distance of radius
+    let cell_size: f64 = radius / (2 as f64).sqrt();
+    let matrix_size: usize = (1. / cell_size).ceil() as usize;
+
+    // We initialize our matrix
+    let mut grid_matrix: Vec<Vec<u8>> = vec![vec![0; matrix_size]; matrix_size];
+    //let mut color_counter: u8 = 1;
+
+    // We do a first pass to eliminate all empty cells
+    for i in 0..matrix_size {
+        for j in 0..matrix_size {
+            if !point_in_cell(&i, &j, &cell_size, &point_vector) {
+                grid_matrix[j][i] = 0b0000_0001
+            }
+        }
+    }
+
+    // We do a first pass to eliminate all empty cells
+    for i in 0..matrix_size {
+        for j in 0..matrix_size {
+            print!("{}", grid_matrix[i][j].to_string())
+        }
+        print!("\n")
+    }
+}
+
+fn point_in_cell(i: &usize, j: &usize, cell_size: &f64, point_vector: &Vec<(f64, f64)>) -> bool {
+    for (x, y) in point_vector {
+        if ((*i as f64) * *cell_size < *x) && (*x < ((*i + 1) as f64) * *cell_size) {
+            if ((*j as f64) * *cell_size < *y) && (*y < ((*j + 1) as f64) * *cell_size) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 fn read_file(file_path: &String) -> (f64, Vec<(f64, f64)>) {
