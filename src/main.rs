@@ -23,8 +23,7 @@ fn main() {
 
     // If user didn't specify a file name
     if args.len() < 2 {
-        println!("Usage : ./{exe_name} exemple.pts");
-        return;
+        panic!("Usage : ./{exe_name} exemple.pts");
     }
 
     // Get file name
@@ -38,50 +37,191 @@ fn main() {
     let point_vector: Vec<(f64, f64)>;
     let radius: f64;
 
-    println!("Full path of file is {}", file_path);
+    //dbg!("Full path of file is {}", &file_path);
 
     (radius, point_vector) = read_file(&file_path);
 
-    println!("r={radius}");
-    for (x, y) in point_vector.iter() {
-        println!("x={x}, y={y}");
-    }
+    //dbg!(format!("r={}", radius));
+    //for (x, y) in point_vector.iter() {
+    //dbg!(format!("x={}, y={}", x, y));
+    //}
 
     // In our algorithm, the size of a cell is sqrt(radius)/2, so that two adjacent cells have at most a distance of radius
     let cell_size: f64 = radius / (2 as f64).sqrt();
     let matrix_size: usize = (1. / cell_size).ceil() as usize;
 
-    // We initialize our matrix
-    let mut grid_matrix: Vec<Vec<u8>> = vec![vec![0; matrix_size]; matrix_size];
-    //let mut color_counter: u8 = 1;
+    // We initialize our matrices
+    let mut point_matrix: Vec<Vec<Vec<(f64, f64)>>> =
+        vec![vec![Vec::new(); matrix_size]; matrix_size];
+    let mut color_matrix: Vec<Vec<u8>> = vec![vec![0; matrix_size]; matrix_size];
+
+    // We initialize the length vector which holds the length of each composantes connexes
+    let mut size_vector: Vec<u16> = vec![0];
+
+    // We initialize the first color
+    let mut color_counter: u8 = 1;
+
+    // We do a first pass to fill the point matrix
+    for (x, y) in &point_vector {
+        let i: usize = (x / cell_size).floor() as usize;
+        let j: usize = (y / cell_size).floor() as usize;
+        point_matrix[j][i].push((*x, *y))
+    }
 
     // We do a first pass to eliminate all empty cells
     for i in 0..matrix_size {
         for j in 0..matrix_size {
-            if !point_in_cell(&i, &j, &cell_size, &point_vector) {
-                grid_matrix[j][i] = 0b0000_0001
+            if !point_in_cell(&i, &j, &point_matrix) {
+                color_matrix[j][i] = 0b1111_1111
+            }
+        }
+    }
+    //println!("Initial matrix");
+    //print_matrix(&color_matrix);
+
+    // Next we color each non-empty cell
+    for i in 0..matrix_size {
+        for j in 0..matrix_size {
+            if color_matrix[j][i] == 0b0000_0000 {
+                add_color_to_matrix_cell(
+                    &i,
+                    &j,
+                    &mut color_matrix,
+                    &point_matrix,
+                    &mut size_vector,
+                    &color_counter,
+                    &radius,
+                );
+
+                //println!("{color_counter}");
+                //print_matrix(&color_matrix);
+
+                // We increment the color counter because we filled the composante connexe
+                color_counter = color_counter + 1;
+                size_vector.push(0)
             }
         }
     }
 
-    // We do a first pass to eliminate all empty cells
+    size_vector.pop().expect("Size vector should not be empty");
+    size_vector.sort();
+    size_vector.reverse();
+
+    //print_matrix(&color_matrix);
+    println!("{:?}", size_vector);
+}
+
+fn print_matrix(color_matrix: &Vec<Vec<u8>>) {
+    // We print the color matrix
+    let matrix_size = color_matrix.len();
     for i in 0..matrix_size {
         for j in 0..matrix_size {
-            print!("{}", grid_matrix[i][j].to_string())
+            print!("{:width$}", color_matrix[i][j].to_string(), width = 4)
         }
         print!("\n")
     }
+    print!("\n")
 }
 
-fn point_in_cell(i: &usize, j: &usize, cell_size: &f64, point_vector: &Vec<(f64, f64)>) -> bool {
-    for (x, y) in point_vector {
-        if ((*i as f64) * *cell_size < *x) && (*x < ((*i + 1) as f64) * *cell_size) {
-            if ((*j as f64) * *cell_size < *y) && (*y < ((*j + 1) as f64) * *cell_size) {
+fn add_color_to_matrix_cell(
+    i: &usize,
+    j: &usize,
+    color_matrix: &mut Vec<Vec<u8>>,
+    point_matrix: &Vec<Vec<Vec<(f64, f64)>>>,
+    size_vector: &mut Vec<u16>,
+    color: &u8,
+    radius: &f64,
+) -> () {
+    // We color the right cell of the color matrix
+    //dbg!("Colored cell i={} j={}", *i, *j);
+    color_matrix[*j][*i] = *color;
+
+    // We add the correct amount of elements to the size vector
+    size_vector[(color - 1) as usize] =
+        size_vector[(color - 1) as usize] + point_matrix[*j][*i].len() as u16;
+
+    let offsets: [(i8, i8); 8] = [
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+        (-1, 1),
+        (1, 0),
+    ];
+
+    for (x_offset, y_offset) in offsets {
+        let adjacent_i = (*i as i8) + x_offset;
+        let adjacent_j = (*j as i8) + y_offset;
+
+        // If 0 <= i+offset < len of matrix
+        if adjacent_i < 0 || adjacent_i >= color_matrix.len() as i8 {
+            //dbg!("ajdacent_i outside of accepted range");
+            continue;
+        }
+        // If 0 <= j+offset < len of matrix
+        if adjacent_j < 0 || adjacent_j >= color_matrix.len() as i8 {
+            //dbg!("ajdacent_j outside of accepted range");
+            continue;
+        }
+
+        // If the two ajdacent cells were already colored
+        if color_matrix[adjacent_j as usize][adjacent_i as usize] != 0b0000_0000 {
+            //dbg!("Cell2 was already colored");
+            continue;
+        }
+
+        // If the two cells are connexe
+        if !two_cells_are_connexe(
+            &i,
+            &j,
+            &(adjacent_i as usize),
+            &(adjacent_j as usize),
+            &point_matrix,
+            &radius,
+        ) {
+            //dbg!("Cells were not connexe");
+            continue;
+        }
+
+        //dbg!("Cells are connexe!");
+        add_color_to_matrix_cell(
+            &(adjacent_i as usize),
+            &(adjacent_j as usize),
+            color_matrix,
+            &point_matrix,
+            size_vector,
+            &color,
+            &radius,
+        );
+    }
+}
+
+fn two_cells_are_connexe(
+    i1: &usize,
+    j1: &usize,
+    i2: &usize,
+    j2: &usize,
+    point_matrix: &Vec<Vec<Vec<(f64, f64)>>>,
+    radius: &f64,
+) -> bool {
+    let radius_squared = (*radius).powi(2);
+    let cell1 = &point_matrix[*j1][*i1];
+    let cell2 = &point_matrix[*j2][*i2];
+
+    for (x_1, y_1) in cell1 {
+        for (x_2, y_2) in cell2 {
+            if (*x_2 - *x_1).powi(2) + (*y_2 - *y_1).powi(2) <= radius_squared {
                 return true;
             }
         }
     }
-    return false;
+    false
+}
+
+fn point_in_cell(i: &usize, j: &usize, point_matrix: &Vec<Vec<Vec<(f64, f64)>>>) -> bool {
+    return point_matrix[*j][*i].len() > 0;
 }
 
 fn read_file(file_path: &String) -> (f64, Vec<(f64, f64)>) {
