@@ -145,7 +145,7 @@ fn add_color_to_matrix_cell(
     size_vector[(color - 1) as usize] =
         size_vector[(color - 1) as usize] + point_matrix[*j][*i].len() as u16;
 
-    let mut offsets: Vec<(i8, i8)> = vec![];
+    /* let mut offsets: Vec<(i8, i8)> = vec![];
     for x in -2..=2 {
         for y in -2..=2 {
             let distance = (x as i8).abs() + (y as i8).abs();
@@ -153,30 +153,35 @@ fn add_color_to_matrix_cell(
                 offsets.push((x as i8, y as i8));
             }
         }
-    }
+    } */
 
-    /* let offsets: [(i8, i8); 20] = [
-        (-1, -1),
-        (0, -1),
-        (1, -1),
-        (-1, 1),
-        (1, 1),S
-        (0, 1),
-        (-1, 0),
-        (1, 0),
-        (-2, -1),
-        (-2, 0),
-        (-2, 1),
-        (2, -1),
-        (-2, 0),
-        (-2, 1),
+    let offsets: [(i8, i8); 20] = [
+        //y=-2
         (-1, -2),
         (0, -2),
         (1, -2),
+        //y=-1
+        (-2, -1),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (2, -1),
+        //y=0
+        (-2, 0),
+        (-1, 0),
+        (1, 0),
+        (2, 0),
+        //y=1
+        (-2, 1),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
+        (2, 1),
+        //y=1
         (-1, 2),
         (0, 2),
         (1, 2),
-    ]; */
+    ];
 
     for (x_offset, y_offset) in offsets {
         let adjacent_i = (*i as i8) + x_offset;
