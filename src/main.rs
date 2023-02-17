@@ -107,21 +107,16 @@ fn main() {
     size_vector.sort();
     size_vector.reverse();
 
-    print_matrix(&color_matrix, &point_matrix);
+    print_matrix(&color_matrix);
     println!("{:?}", size_vector);
 }
 
-fn print_matrix(color_matrix: &Vec<Vec<u8>>, point_matrix: &Vec<Vec<Vec<(f64, f64)>>>) {
+fn print_matrix(color_matrix: &Vec<Vec<u8>>) {
     // We print the color matrix
     let matrix_size = color_matrix.len();
     for i in 0..matrix_size {
         for j in 0..matrix_size {
-            print!(
-                "{:width$} ({:width$}) - ",
-                color_matrix[i][j].to_string(),
-                point_matrix[i][j].len().to_string(),
-                width = 3
-            )
+            print!("{:width$}", color_matrix[i][j].to_string(), width = 4)
         }
         print!("\n")
     }
