@@ -80,8 +80,8 @@ fn main() {
     //print_matrix(&color_matrix);
 
     // Next we color each non-empty cell
-    for i in 0..matrix_size {
-        for j in 0..matrix_size {
+    for j in 0..matrix_size {
+        for i in 0..matrix_size {
             if color_matrix[j][i] == 0b0000_0000 {
                 add_color_to_matrix_cell(
                     &i,
@@ -107,16 +107,21 @@ fn main() {
     size_vector.sort();
     size_vector.reverse();
 
-    //print_matrix(&color_matrix);
+    print_matrix(&color_matrix, &point_matrix);
     println!("{:?}", size_vector);
 }
 
-fn print_matrix(color_matrix: &Vec<Vec<u8>>) {
+fn print_matrix(color_matrix: &Vec<Vec<u8>>, point_matrix: &Vec<Vec<Vec<(f64, f64)>>>) {
     // We print the color matrix
     let matrix_size = color_matrix.len();
     for i in 0..matrix_size {
         for j in 0..matrix_size {
-            print!("{:width$}", color_matrix[i][j].to_string(), width = 4)
+            print!(
+                "{:width$} ({:width$}) - ",
+                color_matrix[i][j].to_string(),
+                point_matrix[i][j].len().to_string(),
+                width = 3
+            )
         }
         print!("\n")
     }
@@ -140,16 +145,38 @@ fn add_color_to_matrix_cell(
     size_vector[(color - 1) as usize] =
         size_vector[(color - 1) as usize] + point_matrix[*j][*i].len() as u16;
 
-    let offsets: [(i8, i8); 8] = [
+    let mut offsets: Vec<(i8, i8)> = vec![];
+    for x in -2..=2 {
+        for y in -2..=2 {
+            let distance = (x as i8).abs() + (y as i8).abs();
+            if distance != 4 && distance != 0 {
+                offsets.push((x as i8, y as i8));
+            }
+        }
+    }
+
+    /* let offsets: [(i8, i8); 20] = [
         (-1, -1),
         (0, -1),
         (1, -1),
-        (1, 0),
-        (1, 1),
-        (0, 1),
         (-1, 1),
+        (1, 1),S
+        (0, 1),
+        (-1, 0),
         (1, 0),
-    ];
+        (-2, -1),
+        (-2, 0),
+        (-2, 1),
+        (2, -1),
+        (-2, 0),
+        (-2, 1),
+        (-1, -2),
+        (0, -2),
+        (1, -2),
+        (-1, 2),
+        (0, 2),
+        (1, 2),
+    ]; */
 
     for (x_offset, y_offset) in offsets {
         let adjacent_i = (*i as i8) + x_offset;
@@ -166,7 +193,7 @@ fn add_color_to_matrix_cell(
             continue;
         }
 
-        // If the two ajdacent cells were already colored
+        // If the ajdacent cell was already colored
         if color_matrix[adjacent_j as usize][adjacent_i as usize] != 0b0000_0000 {
             //dbg!("Cell2 was already colored");
             continue;
