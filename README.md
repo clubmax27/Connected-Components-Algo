@@ -29,17 +29,18 @@ x2, y2
 ...
 ```
 
-- `<radius>`: Radius value (float) used for clustering.
-- `xi, yi`: Coordinates of points (floats) separated by a comma.
+-   `<radius>`: Radius value (float) used for clustering. Must be between 0 and 1.
+-   `xi, yi`: Coordinates of points (floats) separated by a comma. Must be between 0 and 1.
 
-Example input file (`example.pts`):
+Example input file (`points.pts`):
 
 ```
-2.5
-1.0, 1.0
-2.0, 2.0
-1.5, 1.8
-3.0, 3.5
+0.2
+0.29, 0.14
+0.81, 0.28
+0.02, 0.09
+0.9, 0.76
+0.54, 0.49
 ```
 
 ## Output
@@ -52,7 +53,7 @@ The program outputs the clustering matrix where each cell represents a cluster, 
 2. Splice the area in a grid of a specific cell size (based on the radius), where two points in the same cell must be the same color.
 3. Cluster points into connected components by grouping the points in the cells of the grid.
 4. For each adjacent cell of a cell, check if two points are connected. If so, change the color of the second cell to the color of the first one.
-5. Output the resulting color matrix and connected components vector.
+5. Output the resulting color matrix and size of the connected components.
 
 ## Contributing
 
