@@ -107,7 +107,12 @@ fn main() {
     size_vector.sort();
     size_vector.reverse();
 
+    // We print the color matrix
+    println!("Final connected components matrix : ");
     print_matrix(&color_matrix);
+
+    // We print the size vector
+    print!("Size vector : ");
     println!("{:?}", size_vector);
 }
 

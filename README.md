@@ -2,6 +2,8 @@
 
 This Rust program implements an algorithm to cluster points based on a given radius. It reads a file containing points, clusters them into connected components based on a given radius, and outputs the clusters with assigned colors.
 
+![Example image of the program](images/example.png)
+
 ## Pre-requisites
 
 1. Ensure you have Rust installed on your machine.
